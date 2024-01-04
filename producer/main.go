@@ -28,8 +28,7 @@ func main() {
 		}
 	}()
 
-	// 通过 os/signal 包，捕获 interrupt 信号，优雅地关闭程序
-	signals := make(chan os.Signal, 1)
+	signals := make(chan os.Signal, 1) // 通过 os/signal 包，捕获 interrupt 信号，优雅地关闭程序
 	signal.Notify(signals, os.Interrupt)
 
 	var wg sync.WaitGroup
@@ -41,16 +40,14 @@ ProducerLoop:
 			fmt.Println("Interrupt signal received, shutting down...")
 			break ProducerLoop
 		default:
-			// 模拟生成100个数据
-			for i := 1; i <= 100; i++ {
+			for i := 1; i <= 9; i++ { // 模拟生成100个数据
 				input := fmt.Sprintf("Data %d", i)
 				message := &sarama.ProducerMessage{
 					Topic: "mqtt",
 					Value: sarama.StringEncoder(input),
 				}
 
-				// 使用 go 协程发送消息，以避免阻塞主循环
-				go func(msg *sarama.ProducerMessage) {
+				go func(msg *sarama.ProducerMessage) { // 使用 go 协程发送消息，以避免阻塞主循环
 					select {
 					case producer.Input() <- msg:
 						fmt.Println("Message sent to partition", msg.Partition)
