@@ -32,33 +32,33 @@ func main() {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
 
-	var (
-		wg      sync.WaitGroup
-		encoder = sarama.StringEncoder
-	)
+	var wg sync.WaitGroup
 
 ProducerLoop:
 	for {
 		select {
-		case input := <-yourDataChannel: // 从你的数据源读取数据
-			message := &sarama.ProducerMessage{
-				Topic: "mqtt",
-				Value: encoder(input), // 将数据编码为字节数组
-			}
-
-			// 使用 go 协程发送消息，以避免阻塞主循环
-			go func(msg *sarama.ProducerMessage) {
-				select {
-				case producer.Input() <- msg:
-					fmt.Println("Message sent to partition", msg.Partition)
-				case err := <-producer.Errors():
-					fmt.Println("Failed to produce message:", err)
-				}
-			}(message)
-
 		case <-signals:
 			fmt.Println("Interrupt signal received, shutting down...")
 			break ProducerLoop
+		default:
+			// 模拟生成100个数据
+			for i := 1; i <= 100; i++ {
+				input := fmt.Sprintf("Data %d", i)
+				message := &sarama.ProducerMessage{
+					Topic: "mqtt",
+					Value: sarama.StringEncoder(input),
+				}
+
+				// 使用 go 协程发送消息，以避免阻塞主循环
+				go func(msg *sarama.ProducerMessage) {
+					select {
+					case producer.Input() <- msg:
+						fmt.Println("Message sent to partition", msg.Partition)
+					case err := <-producer.Errors():
+						fmt.Println("Failed to produce message:", err)
+					}
+				}(message)
+			}
 		}
 	}
 
