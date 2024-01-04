@@ -42,7 +42,7 @@ ProducerLoop:
 		default:
 			maxConcurrency := 10
 			sem := make(chan struct{}, maxConcurrency)
-			for i := 1; i <= 9; i++ { // 模拟生成100个数据
+			for i := 300; i <= 399 ; i++ { // 模拟生成100个数据
 				input := fmt.Sprintf("Data %d", i)
 				message := &sarama.ProducerMessage{
 					Topic: "mqtt",
