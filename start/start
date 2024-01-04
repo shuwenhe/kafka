@@ -1,0 +1,6 @@
+start
+https://kafka.apache.org/quickstart
+https://kafka.apache.org/documentation/#quickstart
+./zookeeper-server-start.sh ../config/zookeeper.properties &
+./kafka-server-start.sh ../config/server.properties &
+
