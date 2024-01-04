@@ -40,6 +40,8 @@ ProducerLoop:
 			fmt.Println("Interrupt signal received, shutting down...")
 			break ProducerLoop
 		default:
+			maxConcurrency := 10
+			sem := make(chan struct{}, maxConcurrency)
 			for i := 1; i <= 9; i++ { // 模拟生成100个数据
 				input := fmt.Sprintf("Data %d", i)
 				message := &sarama.ProducerMessage{
@@ -48,6 +50,11 @@ ProducerLoop:
 				}
 
 				go func(msg *sarama.ProducerMessage) { // 使用 go 协程发送消息，以避免阻塞主循环
+					sem <- struct{}{}
+					defer func() {
+						<-sem
+					}()
+
 					select {
 					case producer.Input() <- msg:
 						fmt.Println("Message sent to partition", msg.Partition)
