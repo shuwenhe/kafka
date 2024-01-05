@@ -34,6 +34,7 @@ func main() {
 	var wg sync.WaitGroup
 
 ProducerLoop:
+	//
 	for {
 		select {
 		case <-signals:
