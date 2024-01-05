@@ -29,7 +29,7 @@ type syncProducer struct {
 	wg       sync.WaitGroup
 }
 
-func SendMessages(msgs []*ProducerMessage) error {
+func (sp *syncProducer) SendMessages(msgs []*ProducerMessage) error {
 	return nil
 }
 
