@@ -50,10 +50,10 @@ ProducerLoop:
 				}
 
 				countCurrentLimit := 10
+				workQueue := make(chan int, countCurrentLimit)
 				var wg sync.WaitGroup
 				for i := 0; i < countCurrentLimit; i++ {
 					wg.Add(1)
-					workQueue := make(chan int, countCurrentLimit)
 					go func(i int, workQueue chan int, msg *sarama.ProducerMessage) { // 使用 go 协程发送消息，以避免阻塞主循环
 						sem <- struct{}{}
 						defer func() {
