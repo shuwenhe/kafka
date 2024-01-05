@@ -40,10 +40,10 @@ func main() {
 	go func() {
 		defer wg.Done()
 
-		// 3.Create message
 	ConsumerLoop:
 		for {
 			select {
+			// 3.Create message
 			case msg := <-partitionConsumer.Messages():
 				fmt.Printf("Received message: %s\n", msg.Value)
 			case err := <-partitionConsumer.Errors():
