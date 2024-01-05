@@ -11,6 +11,13 @@ import (
 	"github.com/IBM/sarama"
 )
 
+type ProducerMessage struct {
+}
+
+func SendMessages(msgs []*ProducerMessage) error {
+	return nil
+}
+
 func main() {
 	// 1.生产者配置
 	config := sarama.NewConfig()
