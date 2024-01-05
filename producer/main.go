@@ -11,17 +11,19 @@ import (
 	"github.com/IBM/sarama"
 )
 
-type ProducerMessage struct {
-}
-
 type Config struct {
 }
 
 type Client interface {
 }
 
+type ProducerMessage struct {
+	Topic       string
+	expectation chan *ProducerError
+}
 type asyncProducer struct {
-	client Client
+	client    Client
+	successes chan *ProducerMessage
 }
 
 type syncProducer struct {
@@ -29,7 +31,31 @@ type syncProducer struct {
 	wg       sync.WaitGroup
 }
 
+type ProducerError struct {
+	Msg *ProducerMessage
+	Err error
+}
+
+type AsyncProducer interface {
+	Input() chan<- *ProducerMessage
+}
+
+func (p *asyncProducer) Input() chan<- *ProducerMessage {
+	return p.successes
+}
+
 func (sp *syncProducer) SendMessages(msgs []*ProducerMessage) error {
+	expectations := make(chan chan *ProducerError, len(msgs))
+	go func() {
+		for _, msg := range msgs {
+			expectation := make(chan *ProducerError, 1)
+			msg.expectation = expectation
+			sp.producer.Input() <- msg
+			expectations <- expectation
+		}
+		close(expectations)
+	}()
+
 	return nil
 }
 
