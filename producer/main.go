@@ -12,11 +12,12 @@ import (
 )
 
 func main() {
+	// 1.生产者配置
 	config := sarama.NewConfig()
-	config.Producer.RequiredAcks = sarama.WaitForLocal       // 等待本地确认
+	config.Producer.RequiredAcks = sarama.WaitForLocal       // ACK,发送完数据需要leader和follow都确认
 	config.Producer.Compression = sarama.CompressionSnappy   // 使用 Snappy 压缩
 	config.Producer.Flush.Frequency = 500 * time.Millisecond // 每 500 毫秒刷新一次
-
+	// 2.连接kafka
 	producer, err := sarama.NewAsyncProducer([]string{"localhost:9092"}, config)
 	if err != nil {
 		log.Fatal(err)
@@ -46,12 +47,14 @@ ProducerLoop:
 			workQueue := make(chan int, countCurrentLimit)
 			for i := 0; i <= countCurrentLimit; i++ {
 				input := fmt.Sprintf("Data %d", i)
+				// 3.封装消息
 				message := &sarama.ProducerMessage{
 					Topic: "mqtt",
 					Value: sarama.StringEncoder(input),
 				}
 				workQueue <- i
 				wg.Add(1)
+				// 4.发送消息
 				go func(i int, workQueue chan int, msg *sarama.ProducerMessage) { // 使用 go 协程发送消息，以避免阻塞主循环
 					defer func() {
 						<-workQueue
