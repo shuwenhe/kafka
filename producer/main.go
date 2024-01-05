@@ -31,6 +31,10 @@ type syncProducer struct {
 	wg       sync.WaitGroup
 }
 
+type SyncProducer interface {
+	SendMessages(msgs []*ProducerMessage) error
+}
+
 type ProducerError struct {
 	Msg *ProducerMessage
 	Err error
