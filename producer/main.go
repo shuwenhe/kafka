@@ -40,6 +40,16 @@ type AsyncProducer interface {
 	Input() chan<- *ProducerMessage
 }
 
+type ProducerErrors []*ProducerError
+
+func (pe ProducerError) Error() string {
+	return fmt.Sprintf("kafka: Failed to produce message to topic %s:%s", pe.Msg.Topic, pe.Err)
+}
+
+func (pe ProducerErrors) Error() string {
+	return fmt.Sprintf("kafka: Failed to deliver %d message.", len(pe))
+}
+
 func (p *asyncProducer) Input() chan<- *ProducerMessage {
 	return p.successes
 }
@@ -56,6 +66,16 @@ func (sp *syncProducer) SendMessages(msgs []*ProducerMessage) error {
 		close(expectations)
 	}()
 
+	var errors ProducerErrors
+	for expectation := range expectations {
+		if pErr := <-expectation; pErr != nil {
+			errors = append(errors, pErr)
+		}
+	}
+
+	if len(errors) > 0 {
+		return errors
+	}
 	return nil
 }
 
