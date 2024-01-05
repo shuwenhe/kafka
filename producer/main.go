@@ -11,76 +11,8 @@ import (
 	"github.com/IBM/sarama"
 )
 
-type Config struct {
-}
-
-type Client interface {
-}
-
-type ProducerMessage struct {
-	Topic       string
-	expectation chan *ProducerError
-}
-type asyncProducer struct {
-	client    Client
-	successes chan *ProducerMessage
-}
-
-type syncProducer struct {
-	producer *asyncProducer
-	wg       sync.WaitGroup
-}
-
-type SyncProducer interface {
-	SendMessages(msgs []*ProducerMessage) error
-}
-
-type ProducerError struct {
-	Msg *ProducerMessage
-	Err error
-}
-
-type AsyncProducer interface {
-	Input() chan<- *ProducerMessage
-}
-
-type ProducerErrors []*ProducerError
-
-func (pe ProducerError) Error() string {
-	return fmt.Sprintf("kafka: Failed to produce message to topic %s:%s", pe.Msg.Topic, pe.Err)
-}
-
-func (pe ProducerErrors) Error() string {
-	return fmt.Sprintf("kafka: Failed to deliver %d message.", len(pe))
-}
-
-func (p *asyncProducer) Input() chan<- *ProducerMessage {
-	return p.successes
-}
-
-func (sp *syncProducer) SendMessages(msgs []*ProducerMessage) error {
-	expectations := make(chan chan *ProducerError, len(msgs))
-	go func() {
-		for _, msg := range msgs {
-			expectation := make(chan *ProducerError, 1)
-			msg.expectation = expectation
-			sp.producer.Input() <- msg
-			expectations <- expectation
-		}
-		close(expectations)
-	}()
-
-	var errors ProducerErrors
-	for expectation := range expectations {
-		if pErr := <-expectation; pErr != nil {
-			errors = append(errors, pErr)
-		}
-	}
-
-	if len(errors) > 0 {
-		return errors
-	}
-	return nil
+type KafkaMessage struct {
+	KafkaProducer sarama.SyncProducer
 }
 
 func main() {
@@ -125,6 +57,7 @@ ProducerLoop:
 				}
 				workQueue <- i
 				wg.Add(1)
+
 				// 4.发送消息
 				go func(i int, workQueue chan int, msg *sarama.ProducerMessage) { // 使用 go 协程发送消息，以避免阻塞主循环
 					defer func() {
