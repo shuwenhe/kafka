@@ -41,16 +41,21 @@ ProducerLoop:
 			break ProducerLoop
 		default:
 			var wg sync.WaitGroup
-			countCurrentLimit := 10
+			const countCurrentLimit = 10
 			workQueue := make(chan int, countCurrentLimit)
-			for i := 0; i <= countCurrentLimit; i++ { // 模拟生成100个数据
+			for i := 0; i <= countCurrentLimit; i++ {
 				input := fmt.Sprintf("Data %d", i)
 				message := &sarama.ProducerMessage{
 					Topic: "mqtt",
 					Value: sarama.StringEncoder(input),
 				}
+				workQueue <- i
 				wg.Add(1)
 				go func(i int, workQueue chan int, msg *sarama.ProducerMessage) { // 使用 go 协程发送消息，以避免阻塞主循环
+					defer func() {
+						<-workQueue
+						wg.Done()
+					}()
 					select {
 					case producer.Input() <- msg:
 						fmt.Println("Message sent to partition", msg.Partition)
