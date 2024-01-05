@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	// 1.Create consumer
 	config := sarama.NewConfig()
 	consumer, err := sarama.NewConsumer([]string{"localhost:9092"}, config)
 	if err != nil {
@@ -23,6 +24,7 @@ func main() {
 		}
 	}()
 
+	// 2.Create consumer partition
 	partitionConsumer, err := consumer.ConsumePartition("mqtt", 0, sarama.OffsetOldest)
 	if err != nil {
 		log.Fatal(err)
@@ -38,15 +40,14 @@ func main() {
 	go func() {
 		defer wg.Done()
 
+		// 3.Create message
 	ConsumerLoop:
 		for {
 			select {
 			case msg := <-partitionConsumer.Messages():
 				fmt.Printf("Received message: %s\n", msg.Value)
-
 			case err := <-partitionConsumer.Errors():
 				fmt.Println("Error:", err)
-
 			case <-signals:
 				fmt.Println("Interrupt signal received, shutting down consumer...")
 				break ConsumerLoop
