@@ -14,6 +14,21 @@ import (
 type ProducerMessage struct {
 }
 
+type Config struct {
+}
+
+type Client interface {
+}
+
+type asyncProducer struct {
+	client Client
+}
+
+type syncProducer struct {
+	producer *asyncProducer
+	wg       sync.WaitGroup
+}
+
 func SendMessages(msgs []*ProducerMessage) error {
 	return nil
 }
